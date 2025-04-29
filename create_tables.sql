@@ -1,5 +1,5 @@
 CREATE TABLE students(
-    id INTEGER PROMARY KEY,
+    id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     birth_date DATE NOT NULL
 );
