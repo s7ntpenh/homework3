@@ -12,6 +12,7 @@ def create_app():
     app = Flask(__name__)
     # Load DB URL from .env (via pydantic BaseSettings)
     app.config['SQLALCHEMY_DATABASE_URI'] = settings.DB_URL
+    app.url_map.strict_slashes = False
 
     # Initialize extensions
     db.init_app(app)

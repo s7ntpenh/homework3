@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.min.js"></script>
-
 </head>
 
 <body>
@@ -16,32 +15,52 @@
 <div class="container mt-4">
     <h2>Students List</h2>
 
+    <!-- Search form -->
+    <div class="form-inline mb-3">
+        <input type="text" id="searchName" class="form-control mr-2" placeholder="Search by name">
+        <button id="searchButton" class="btn btn-secondary mr-2">Search</button>
+        <button id="resetButton" class="btn btn-light">Reset</button>
+    </div>
+
     <!-- Add student form -->
-    <div class="card mt-4">
+    <div class="card mb-4">
         <div class="card-header">Add a New Student</div>
         <div class="card-body">
-            <form id="addStudentForm">
-                <div class="form-group">
-                    <label for="name">Student Name:</label>
+            <form id="addStudentForm" class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="name">Name</label>
                     <input type="text" class="form-control" id="name" placeholder="Student Name" required>
                 </div>
-                <div class="form-group">
-                    <label for="birth_date">Birth Date:</label>
+                <div class="form-group col-md-3">
+                    <label for="birth_date">Birth Date</label>
                     <input type="date" class="form-control" id="birth_date" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Add Student</button>
+                <div class="form-group col-md-3">
+                    <label for="course">Course</label>
+                    <input type="text" class="form-control" id="course" placeholder="Course Name" required>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="photo_url">Photo URL</label>
+                    <input type="url" class="form-control" id="photo_url" placeholder="https://...">
+                </div>
+                <div class="form-group col-12">
+                    <button type="submit" class="btn btn-primary">Add Student</button>
+                </div>
             </form>
         </div>
     </div>
 
     <!-- List of students in a table -->
-    <h4 class="mt-4">List of students:</h4>
+    <h4>List of students:</h4>
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Student Id</th>
+                <th>Id</th>
                 <th>Name</th>
                 <th>Birth Date</th>
+                <th>Course</th>
+                <th>Photo</th>
+                <th>Age</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -52,25 +71,31 @@
 </div>
 
 <!-- Edit student modal -->
-<div class="modal" tabindex="-1" role="dialog" id="editStudentModal">
-  <div class="modal-dialog" role="document">
+<div class="modal fade" id="editStudentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Edit Student</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="editStudentForm">
+        <form id="editStudentForm" class="form-row">
             <input type="hidden" id="editStudentId">
-            <div class="form-group">
-                <label for="editStudentName">Name:</label>
+            <div class="form-group col-md-4">
+                <label for="editStudentName">Name</label>
                 <input type="text" class="form-control" id="editStudentName" required>
             </div>
-            <div class="form-group">
-                <label for="editStudentBirthDate">Birth Date:</label>
+            <div class="form-group col-md-4">
+                <label for="editStudentBirthDate">Birth Date</label>
                 <input type="date" class="form-control" id="editStudentBirthDate" required>
+            </div>
+            <div class="form-group col-md-4">
+                <label for="editStudentCourse">Course</label>
+                <input type="text" class="form-control" id="editStudentCourse" required>
+            </div>
+            <div class="form-group col-12">
+                <label for="editStudentPhoto">Photo URL</label>
+                <input type="url" class="form-control" id="editStudentPhoto">
             </div>
         </form>
       </div>
@@ -83,52 +108,30 @@
 </div>
 
 <script>
-    // Update student
-    function updateStudent(id) {
-        // Fetch the current details of the student to pre-populate the form.
-        // This assumes you have a backend route to get details of a single student.
-        $.getJSON(`/students/${id}`, function(data) {
-            $('#editStudentId').val(data.student_id);
-            $('#editStudentName').val(data.name);
-            $('#editStudentBirthDate').val(data.birth_date);
-            $('#editStudentModal').modal('show');
-        });
-    }
-
-    function submitEditStudent() {
-        const updatedStudent = {
-            name: $('#editStudentName').val(),
-            birth_date: $('#editStudentBirthDate').val()
-        };
-
-        const studentId = $('#editStudentId').val();
-
-        $.ajax({
-            url: `/students/${studentId}`,
-            type: 'PATCH',
-            data: JSON.stringify(updatedStudent),
-            contentType: 'application/json',
-            success: function() {
-                $('#editStudentModal').modal('hide');
-                fetchStudents();
-            }
-        });
-    }
-
-
-    // Fetch all students and display them
+    // optional name filter
     function fetchStudents() {
-        $.getJSON('/students', function(data) {
+        const name = $('#searchName').val().trim();
+        let url = '/students';
+        if (name) {
+            url += '?name=' + encodeURIComponent(name);
+        }
+        $.getJSON(url, function(data) {
             $('#studentsList').empty();
             data.students.forEach(student => {
                 $('#studentsList').append(`
                     <tr>
-
                         <td>${student.student_id}</td>
                         <td>${student.name}</td>
                         <td>${student.birth_date}</td>
+                        <td>${student.course}</td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="updateStudent(${student.student_id})">Update</button>
+                            ${ student.photo_url
+                                ? `<img src="${student.photo_url}" alt="Photo" width="50" />`
+                                : '' }
+                        </td>
+                        <td>${student.age}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="updateStudent(${student.student_id})">Edit</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteStudent(${student.student_id})">Delete</button>
                         </td>
                     </tr>
@@ -142,7 +145,9 @@
         e.preventDefault();
         const newStudent = {
             name: $('#name').val(),
-            birth_date: $('#birth_date').val()
+            birth_date: $('#birth_date').val(),
+            course: $('#course').val(),
+            photo_url: $('#photo_url').val() || null
         };
         $.ajax({
             url: '/students',
@@ -151,8 +156,8 @@
             contentType: 'application/json',
             success: function() {
                 fetchStudents();
-                $('#addStudentForm')[0].reset();
-            }
+                this.reset();
+            }.bind(this)
         });
     });
 
@@ -162,17 +167,51 @@
             $.ajax({
                 url: `/students/${id}`,
                 type: 'DELETE',
-                success: function() {
-                    fetchStudents();
-                }
+                success: fetchStudents
             });
         }
     }
 
-    // Initial fetch
-    fetchStudents();
+    function updateStudent(id) {
+        $.getJSON(`/students/${id}`, function(data) {
+            $('#editStudentId').val(data.student_id);
+            $('#editStudentName').val(data.name);
+            $('#editStudentBirthDate').val(data.birth_date);
+            $('#editStudentCourse').val(data.course);
+            $('#editStudentPhoto').val(data.photo_url);
+            $('#editStudentModal').modal('show');
+        });
+    }
 
+    function submitEditStudent() {
+        const id = $('#editStudentId').val();
+        const updated = {
+            name: $('#editStudentName').val(),
+            birth_date: $('#editStudentBirthDate').val(),
+            course: $('#editStudentCourse').val(),
+            photo_url: $('#editStudentPhoto').val() || null
+        };
+        $.ajax({
+            url: `/students/${id}`,
+            type: 'PATCH',
+            data: JSON.stringify(updated),
+            contentType: 'application/json',
+            success: function() {
+                $('#editStudentModal').modal('hide');
+                fetchStudents();
+            }
+        });
+    }
 
+    // Search & reset handlers
+    $('#searchButton').on('click', fetchStudents);
+    $('#resetButton').on('click', function() {
+        $('#searchName').val('');
+        fetchStudents();
+    });
+
+    // Initial load
+    $(document).ready(fetchStudents);
 </script>
 </body>
 </html>

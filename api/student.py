@@ -11,8 +11,17 @@ students_bp = Blueprint("students_bp", __name__, url_prefix="/students")
 
 @students_bp.route("/", methods=["GET"])
 def get_all_students():
-    students = Student.query.all()
-    return jsonify({"students": [StudentReadModel.model_validate(s).model_dump(mode="json") for s in students]})
+    name_filter = request.args.get("name", type=str)
+    q = Student.query
+    if name_filter:
+        q = q.filter(Student.name.ilike(f"%{name_filter}%"))
+    students = q.all()
+
+    result = [
+        StudentReadModel.model_validate(s).model_dump(mode="json")
+        for s in students
+    ]
+    return jsonify({"students": result}), 200
 
 @students_bp.route('/', methods=['POST'])
 def create_student():
